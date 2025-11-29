@@ -1,0 +1,69 @@
+.exercise-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.exercise-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.exercise-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.exercise-card-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.exercise-card-description {
+  color: var(--color-gray-dark);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.exercise-card-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--color-gray-dark);
+}
+
+.exercise-card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.exercise-card-actions .btn {
+  flex: 1;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.exercise-card-disabled {
+  padding: 16px;
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.exercise-card-disabled p {
+  color: var(--color-error);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .exercise-card-actions {
+    flex-direction: column;
+  }
+}
+

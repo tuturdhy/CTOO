@@ -1,0 +1,123 @@
+.survey-page {
+  min-height: 100vh;
+  padding: 40px 0;
+  background: var(--color-gray-light);
+}
+
+.survey-header {
+  margin-bottom: 40px;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-bottom: 20px;
+  transition: var(--transition);
+}
+
+.btn-back:hover {
+  opacity: 0.7;
+}
+
+.survey-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--color-gray);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.survey-progress-bar {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+.survey-step-indicator {
+  text-align: center;
+  color: var(--color-gray-dark);
+  font-size: 14px;
+}
+
+.survey-content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.survey-question {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 40px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.survey-options {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.survey-option {
+  min-height: 80px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.survey-option-front,
+.survey-option-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-size: 18px;
+  font-weight: 500;
+  border-radius: 12px;
+}
+
+.survey-option-front {
+  background: var(--color-white);
+  color: var(--color-text);
+  border: 2px solid var(--color-gray);
+}
+
+.survey-option-back {
+  background: var(--color-primary);
+  color: var(--color-white);
+  transform: rotateY(180deg);
+}
+
+.survey-option.selected .survey-option-front {
+  border-color: var(--color-primary);
+  background: rgba(214, 0, 28, 0.05);
+}
+
+.survey-actions {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .survey-question {
+    font-size: 22px;
+  }
+  
+  .survey-option-front,
+  .survey-option-back {
+    font-size: 16px;
+    padding: 20px;
+  }
+}
+
