@@ -1,0 +1,14 @@
+@'
+venv/
+node_modules/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+*.sqlite3
+/build/
+/dist/
+npm-debug.log
+.idea/
+.vscode/
+'@ | Out-File -Encoding UTF8 .gitignore
