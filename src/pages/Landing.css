@@ -5,6 +5,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background: #000000;
 }
 
 .landing-background {
@@ -13,16 +14,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
-  background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
-  opacity: 0.1;
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 1;
 }
 
 .landing-content {
@@ -44,22 +39,34 @@
   justify-content: center;
 }
 
+.landing-icon svg {
+  filter: brightness(0) invert(1) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+.landing-icon svg circle,
+.landing-icon svg path {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
 .landing-title {
   font-size: 64px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: #ffffff;
   margin-bottom: 20px;
   letter-spacing: -1px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
 }
 
 .landing-subtitle {
   font-size: 20px;
-  color: var(--color-gray-dark);
+  color: #e0e0e0;
   margin-bottom: 40px;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
 }
 
 .landing-buttons {
@@ -69,42 +76,76 @@
   flex-wrap: wrap;
 }
 
-.landing-features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 30px;
+/* Container pour la galerie circulaire */
+.landing-gallery-container {
+  width: 100%;
+  height: 500px;
   margin-top: 60px;
+  position: relative;
 }
 
-.feature-card {
-  background: var(--color-white);
-  padding: 30px;
-  border-radius: 16px;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
+/* Animations */
+.fade-in {
+  animation: fadeIn 1s ease-out;
 }
 
-.feature-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-md);
+.slide-in {
+  animation: slideIn 0.8s ease-out;
 }
 
-.feature-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.feature-card h3 {
-  font-size: 20px;
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Styles des boutons */
+.btn {
+  padding: 16px 32px;
+  font-size: 18px;
   font-weight: 600;
-  margin-bottom: 12px;
-  color: var(--color-text);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border: none;
 }
 
-.feature-card p {
-  color: var(--color-gray-dark);
-  font-size: 14px;
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+  color: #ffffff !important;
+  border: none;
+  font-weight: 700;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  color: #ffffff !important;
+}
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.btn-large {
+  min-width: 200px;
 }
 
 @media (max-width: 768px) {
@@ -123,5 +164,8 @@
   .landing-buttons button {
     width: 100%;
   }
+  
+  .landing-gallery-container {
+    height: 400px;
+  }
 }
-

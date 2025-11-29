@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { filterExercisesByProfile } from '../data/exercises'
 import { storage, STORAGE_KEYS } from '../utils/storage'
 import ExerciseCard from '../components/ExerciseCard'
+import Orb from './Orb' // ou '../components/Orb' si vous mettez Orb dans components
 import './ExerciseList.css'
 
 function ExerciseList() {
@@ -23,6 +24,16 @@ function ExerciseList() {
 
   return (
     <div className="exercise-list-page">
+      {/* Background Orb */}
+      <div className="exercise-background">
+        <Orb
+          hue={-30}
+          hoverIntensity={0.3}
+          rotateOnHover={false}
+          forceHoverState={false}
+        />
+      </div>
+
       <div className="container">
         <div className="exercise-list-header">
           <div className="header-top">
@@ -104,4 +115,3 @@ function ExerciseList() {
 }
 
 export default ExerciseList
-

@@ -131,3 +131,32 @@ a {
 .breathe {
   animation: breathe 3s ease-in-out infinite;
 }
+:root {
+  /* Couleurs Decathlon */
+  --color-decathlon-red: #D6001C;
+  --color-decathlon-red-light: #ff3b4f;
+  --color-decathlon-red-dark: #a00014;
+
+  /* Neutres */
+  --color-gray-900: #1a1a1a;
+  --color-gray-800: #2d3748;
+  --color-gray-700: #4a5568;
+  --color-gray-200: #e2e8f0;
+  --color-white: #ffffff;
+
+  /* Accents */
+  --color-recommended: #48bb78;    /* vert doux */
+  --color-modified: #ecc94b;       /* jaune attention */
+  --color-avoid: #e53e3e;          /* rouge doux */
+
+  /* Typo */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Ombres */
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Transitions */
+  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}

@@ -1,13 +1,38 @@
 import { useNavigate } from 'react-router-dom'
 import './Landing.css'
 import AthleteIcon from '../components/icons/AthleteIcon'
+import Iridescence from './Iridescence'
+import CircularGallery from './CircularGallery'
 
 function Landing() {
   const navigate = useNavigate()
+  
+  const galleryItems = [
+    { 
+      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=600&fit=crop',
+      text: '🎯 Guidage intelligent'
+    },
+    { 
+      image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=600&fit=crop',
+      text: '🔒 100% privé'
+    },
+    { 
+      image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&h=600&fit=crop',
+      text: '⚡ Personnalisé'
+    }
+  ]
 
   return (
     <div className="landing">
-      <div className="landing-background"></div>
+      <div className="landing-background">
+      <Iridescence
+  color={[0.8, 0.2, 0.2]}  // Rouge foncé au lieu de violet
+  mouseReact={true}
+  amplitude={0.05}
+  speed={0.6}
+/>
+      </div>
+      
       <div className="landing-content">
         <div className="landing-hero fade-in">
           <div className="landing-icon">
@@ -38,22 +63,16 @@ function Landing() {
             </button>
           </div>
         </div>
-        <div className="landing-features">
-          <div className="feature-card slide-in" style={{ animationDelay: '0.1s' }}>
-            <div className="feature-icon">🎯</div>
-            <h3>Guidage intelligent</h3>
-            <p>Corrections en temps réel de votre posture</p>
-          </div>
-          <div className="feature-card slide-in" style={{ animationDelay: '0.2s' }}>
-            <div className="feature-icon">🔒</div>
-            <h3>100% privé</h3>
-            <p>Traitement local, aucune image envoyée</p>
-          </div>
-          <div className="feature-card slide-in" style={{ animationDelay: '0.3s' }}>
-            <div className="feature-icon">⚡</div>
-            <h3>Personnalisé</h3>
-            <p>Exercices adaptés à votre profil</p>
-          </div>
+        
+        <div className="landing-gallery-container">
+          <CircularGallery 
+            items={galleryItems}
+            bend={2}
+            textColor="#ffffff"
+            borderRadius={0.08}
+            scrollEase={0.08}
+            scrollSpeed={1.5}
+          />
         </div>
       </div>
     </div>
@@ -61,4 +80,3 @@ function Landing() {
 }
 
 export default Landing
-
