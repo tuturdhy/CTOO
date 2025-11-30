@@ -3,7 +3,32 @@
   padding: 40px 0;
   background: var(--color-gray-light);
 }
+.profile-page {
+  min-height: 100vh;
+  padding: 40px 0;
+  position: relative;       /* ← crucial */
+  overflow: hidden;
+  background: var(--color-white);
+}
 
+.profile-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* Garde le reste de ton CSS existant */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1000px;
+  margin: 0 auto;
+}
 .profile-header {
   margin-bottom: 40px;
 }
@@ -189,3 +214,22 @@
   }
 }
 
+/* 1. Titre principal "Mon Profil" */
+.profile-header h1 {
+  color: #4a90e2 !important;
+}
+
+/* 2. Titres des sections */
+.profile-section h2 {
+  color: #4a90e2 !important;
+}
+
+/* 3. Nombres dans les cartes de stats */
+.stat-value {
+  color: #4a90e2 !important;
+}
+
+/* 4. Score dans l'historique (ex: "100%") */
+.session-score {
+  color: #4a90e2 !important;
+}

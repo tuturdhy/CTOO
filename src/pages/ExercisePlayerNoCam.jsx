@@ -4,7 +4,7 @@ import { EXERCISES } from '../data/exercises'
 import { storage, STORAGE_KEYS } from '../utils/storage'
 import ExerciseSVG from '../components/ExerciseSVG'
 import './ExercisePlayerNoCam.css'
-
+import Orb from './Orb';
 function ExercisePlayerNoCam() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -121,7 +121,16 @@ function ExercisePlayerNoCam() {
   const progress = isRunning ? (currentRep / exercise.duration) * 100 : 0
 
   return (
-    <div className="exercise-player-page">
+    <div className="exercise-player-page exercise-player-bleu-theme">
+    {/* 👇 FOND ORB EN ARRIÈRE-PLAN */}
+    <div className="exercise-player-background">
+      <Orb
+        hue={-30}
+        hoverIntensity={0.3}
+        rotateOnHover={false}
+        forceHoverState={false}
+      />
+    </div>
       <div className="container">
         <div className="exercise-player-header">
           <button className="btn-back" onClick={() => navigate('/exercises')}>

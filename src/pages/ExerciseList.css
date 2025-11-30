@@ -6,7 +6,46 @@
   font-family: var(--font-sans);
   background: var(--color-white);
 }
+.exercise-section:first-of-type .section-title {
+  color: #4a90e2 !important;
+}/* ===== FOND ORB POUR EXERCICE SANS CAMÉRA ===== */
+.exercise-player-page {
+  position: relative;       /* ← indispensable */
+  min-height: 100vh;
+  padding: 40px 0;
+  overflow: hidden;
+  background: var(--color-white); /* ou #ffffff */
+}
 
+.exercise-player-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.header-top h1 {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  color: #4a90e2 !important; /* bleu plus foncé */
+  text-shadow: none;
+}
+
+/* Titres de toutes les cartes */
+.exercise-card h3 {
+  color: #4a90e2 !important;
+}
 /* Background Orb */
 .exercise-background {
   position: fixed;
@@ -220,4 +259,38 @@
   .exercise-card .btn {
     width: 100%;
   }
+}
+.exercise-card.recommended h3 {
+  color: #4a90e2 !important;
+}/* ✨ Animation de frappe pour le titre */
+.exercise-typing-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #4a90e2 !important;
+  margin: 0;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  text-shadow: none;
+}
+
+/* 🃏 Animation d'entrée des cartes */
+.animate-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s ease-out forwards;
+  animation-delay: var(--animation-delay, 0s);
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}/* 🔽 Boutons plus petits dans la page ExerciseList */
+.exercise-card .btn,
+.exercise-list-header .btn.btn-secondary {
+  padding: 6px 12px;     /* réduit le padding (était 8px 12px ou plus) */
+  font-size: 0.8125rem;  /* légèrement plus petit (13px au lieu de 14px) */
+  min-height: auto;      /* évite les hauteurs fixes */
 }

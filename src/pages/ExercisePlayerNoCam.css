@@ -3,7 +3,106 @@
   padding: 40px 0;
   background: var(--color-gray-light);
 }
+/* ===== FOND ORB POUR LA PAGE D'EXERCICE ===== */
+.exercise-player-page {
+  position: relative; /* ← crucial pour z-index */
+  background: var(--color-white); /* ou #ffffff */
+}
 
+.exercise-player-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+/* ===== THEME BLEU POUR SQUAT MODIFIÉ SEULEMENT ===== */
+/* Barre de progression en bleu */
+.progress-bar-fill {
+  background-color: #4a90e2 !important;
+}
+.squat-modified-theme .exercise-player-header h1,
+.squat-modified-theme .exercise-player-header p {
+  color: #4a90e2 !important;
+}
+
+/* Conseils */
+.squat-modified-theme .exercise-tips h3,
+.squat-modified-theme .tip-text {
+  color: #4a90e2 !important;
+}
+
+/* Erreurs fréquentes */
+.squat-modified-theme .exercise-common-errors h3,
+.squat-modified-theme .error-item,
+.squat-modified-theme .error-item strong {
+  color: #4a90e2 !important;
+  border-left-color: #4a90e2 !important;
+}
+
+.squat-modified-theme .exercise-common-errors {
+  background: rgba(74, 144, 226, 0.1) !important; /* fond bleu très clair */
+  border-left: 4px solid #4a90e2 !important;
+}
+
+/* ===== FORCER LA COULEUR DANS LE SVG ===== */
+.squat-modified-theme .exercise-svg-wrapper svg {
+  color: #4a90e2 !important;
+}
+
+/* Cible tous les <path>, <circle>, etc. dans le SVG */
+.squat-modified-theme .exercise-svg-wrapper svg * {
+  fill: #4a90e2 !important;
+  stroke: #4a90e2 !important;
+}
+/* ===== THEME BLEU POUR TOUS LES EXERCICES (sans caméra) ===== */
+
+.exercise-player-bleu-theme .exercise-player-header h1,
+.exercise-player-bleu-theme .exercise-player-header p {
+  color: #4a90e2 !important;
+}
+
+/* Conseils */
+.exercise-player-bleu-theme .exercise-tips h3,
+.exercise-player-bleu-theme .tip-text {
+  color: #4a90e2 !important;
+}
+
+/* Erreurs fréquentes */
+.exercise-player-bleu-theme .exercise-common-errors h3,
+.exercise-player-bleu-theme .error-item,
+.exercise-player-bleu-theme .error-item strong {
+  color: #4a90e2 !important;
+}
+
+.exercise-player-bleu-theme .exercise-common-errors {
+  background: rgba(74, 144, 226, 0.1) !important;
+  border-left: 4px solid #4a90e2 !important;
+}
+
+/* SVG en bleu */
+.exercise-player-bleu-theme .exercise-svg-wrapper svg * {
+  fill: #4a90e2 !important;
+  stroke: #4a90e2 !important;
+}
+
+/* Barre de progression (déjà globale, mais on peut la confirmer ici aussi) */
+.exercise-player-bleu-theme .progress-bar-fill {
+  background-color: #4a90e2 !important;
+}
+/* Si certains éléments doivent rester blancs (ex: yeux, détails), 
+   tu devras les exclure manuellement plus tard, mais pour l’instant,
+   on applique globalement comme demandé. */
 .exercise-player-header {
   margin-bottom: 40px;
 }

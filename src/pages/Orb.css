@@ -3,4 +3,29 @@
     z-index: 0;
     width: 100%;
     height: 100%;
-  }
+  }.survey-page {
+  min-height: 100vh;
+  padding: 40px 0;
+  position: relative;       /* ← crucial */
+  overflow: hidden;
+  background: var(--color-white); /* ou #ffffff */
+}
+
+.survey-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* Garde le reste de ton CSS existant */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
+}

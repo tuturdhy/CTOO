@@ -3,7 +3,38 @@
   padding: 40px 0;
   background: var(--color-gray-light);
 }
+/* 2. Carte sélectionnée : fond et bordure bleus */
+.survey-option.selected .survey-option-front {
+  border-color: #4a90e2 !important;
+  background: rgba(74, 144, 226, 0.12) !important; /* bleu très clair */
+}
 
+/* 3. Arrière de la carte (le ✓) en bleu */
+.survey-option-back {
+  background: #4a90e2 !important;
+  color: white !important;
+}
+
+/* 1. Question en bleu */
+.survey-question {
+  color: #4a90e2 !important;
+}
+
+/* 2. Bouton "Retour" en bleu */
+.btn-back {
+  color: #4a90e2 !important;
+}
+
+/* 3. Barre de progression en bleu */
+.survey-progress-bar {
+  background: #4a90e2 !important;
+}
+
+/* 4. Arrière-plan des cartes sélectionnées : fond bleu très clair */
+.survey-option.selected .survey-option-front {
+  border-color: #4a90e2 !important;
+  background: rgba(74, 144, 226, 0.1) !important; /* #4a90e2 avec opacité 10% */
+}
 .survey-header {
   margin-bottom: 40px;
 }
@@ -120,4 +151,29 @@
     padding: 20px;
   }
 }
+.survey-page {
+  min-height: 100vh;
+  padding: 40px 0;
+  position: relative;       /* ← crucial */
+  overflow: hidden;
+  background: var(--color-white); /* ou #ffffff */
+}
 
+.survey-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* Garde le reste de ton CSS existant */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
+}

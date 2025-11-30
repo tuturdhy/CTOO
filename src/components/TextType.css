@@ -1,0 +1,21 @@
+.text-type {
+    display: inline-block;
+    white-space: pre-wrap;
+    line-height: 1.4;
+  }
+  
+  .text-type__cursor {
+    margin-left: 0.25rem;
+    display: inline-block;
+    opacity: 1;
+    animation: blink 1s infinite;
+  }
+  
+  .text-type__cursor--hidden {
+    display: none;
+  }
+  
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }

@@ -1,3 +1,4 @@
+// src/pages/ExercisePlayerCam.jsx
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import * as tf from '@tensorflow/tfjs'
@@ -5,23 +6,28 @@ import * as poseDetection from '@tensorflow-models/pose-detection'
 import { EXERCISES } from '../data/exercises'
 import { storage, STORAGE_KEYS } from '../utils/storage'
 import './ExercisePlayerCam.css'
+import Orb from './Orb';
 
 function ExercisePlayerCam() {
   const { id } = useParams()
   const navigate = useNavigate()
   const exercise = EXERCISES.find(ex => ex.id === id)
+
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const animationFrameRef = useRef(null)
+  const smoothedKeypointsRef = useRef(null)
+
   const [detector, setDetector] = useState(null)
+  const [isInitialized, setIsInitialized] = useState(false)
+  const [hasPermission, setHasPermission] = useState(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+
+  // UI state shown to the user
+  const [detectionStatus, setDetectionStatus] = useState('En attente...')
   const [angles, setAngles] = useState({})
   const [errors, setErrors] = useState([])
   const [score, setScore] = useState(100)
-  const [isInitialized, setIsInitialized] = useState(false)
-  const [hasPermission, setHasPermission] = useState(null)
-  const [detectionStatus, setDetectionStatus] = useState('En attente...')
-  const animationFrameRef = useRef(null)
-  const smoothedKeypointsRef = useRef(null)
 
   useEffect(() => {
     if (!exercise) {
@@ -29,19 +35,23 @@ function ExercisePlayerCam() {
       return
     }
     initializeDetector()
+
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
-      }
-      if (videoRef.current) {
+      // cleanup
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop())
-        }
+        try { stream.getTracks().forEach(t => t.stop()) } catch (e) { /* ignore */ }
+        videoRef.current.srcObject = null
+      }
+      if (detector && detector.dispose) {
+        try { detector.dispose() } catch (e) { /* ignore */ }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercise, navigate])
 
+  // Initialize MoveNet detector
   const initializeDetector = async () => {
     try {
       await tf.ready()
@@ -52,336 +62,325 @@ function ExercisePlayerCam() {
       const poseDetector = await poseDetection.createDetector(model, detectorConfig)
       setDetector(poseDetector)
       setIsInitialized(true)
+      setDetectionStatus('✅ Modèle prêt')
     } catch (error) {
       console.error('Error initializing detector:', error)
+      setDetectionStatus('❌ Erreur d\'initialisation du modèle')
       alert('Erreur lors de l\'initialisation du détecteur de pose')
     }
   }
 
+  // Request camera permission and start video
   const requestCameraPermission = async () => {
     try {
+      setDetectionStatus('⏳ Demande d\'accès à la caméra...')
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           width: { ideal: 640 },
           height: { ideal: 480 },
-          facingMode: 'user' 
-        }
+          facingMode: 'user'
+        },
+        audio: false
       })
       if (videoRef.current) {
+        // attach stream and try to play
         videoRef.current.srcObject = stream
-        await videoRef.current.play()
-        
-        // Attendre que la vidéo soit prête avant d'afficher
-        videoRef.current.addEventListener('loadedmetadata', () => {
-          if (canvasRef.current) {
-            canvasRef.current.width = videoRef.current.videoWidth
-            canvasRef.current.height = videoRef.current.videoHeight
+        videoRef.current.muted = true
+        videoRef.current.playsInline = true
+        // ensure video is visible
+        videoRef.current.style.display = 'block'
+        try {
+          await videoRef.current.play()
+        } catch (playErr) {
+          // autoplay policy — still continue; user will press start
+          console.warn('video.play() failed (autoplay policy):', playErr)
+        }
+        // set canvas size when metadata available
+        const onLoaded = () => {
+          const v = videoRef.current
+          const c = canvasRef.current
+          if (c && v) {
+            c.width = v.videoWidth || v.clientWidth || 640
+            c.height = v.videoHeight || v.clientHeight || 480
+            // make sure canvas overlays video (CSS should handle it)
           }
-        })
-        
-        setHasPermission(true)
+        }
+        videoRef.current.addEventListener('loadedmetadata', onLoaded, { once: true })
+        videoRef.current.addEventListener('loadeddata', onLoaded, { once: true })
       }
+      setHasPermission(true)
+      setDetectionStatus('✅ Caméra autorisée')
     } catch (error) {
       console.error('Error accessing camera:', error)
       setHasPermission(false)
-      alert('Impossible d\'accéder à la caméra. Veuillez autoriser l\'accès dans les paramètres de votre navigateur.')
+      setDetectionStatus('⛔ Accès caméra refusé')
+      alert('Impossible d\'accéder à la caméra. Veuillez autoriser l\'accès dans les paramètres de votre navigateur et fermer les autres apps utilisant la caméra.')
     }
   }
 
-  const calculateAngle = (point1, point2, point3) => {
-    if (!point1 || !point2 || !point3) return null
-
-    const vector1 = {
-      x: point1.x - point2.x,
-      y: point1.y - point2.y
-    }
-    const vector2 = {
-      x: point3.x - point2.x,
-      y: point3.y - point2.y
-    }
-
-    const dot = vector1.x * vector2.x + vector1.y * vector2.y
-    const mag1 = Math.sqrt(vector1.x * vector1.x + vector1.y * vector1.y)
-    const mag2 = Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y)
-
-    if (mag1 === 0 || mag2 === 0) return null
-
-    const cosAngle = dot / (mag1 * mag2)
-    const angle = Math.acos(Math.max(-1, Math.min(1, cosAngle))) * (180 / Math.PI)
-    return angle
+  // utility: calculate angle between three points (p1 - p2 - p3) in degrees
+  const calculateAngle = (p1, p2, p3) => {
+    if (!p1 || !p2 || !p3) return null
+    const v1 = { x: p1.x - p2.x, y: p1.y - p2.y }
+    const v2 = { x: p3.x - p2.x, y: p3.y - p2.y }
+    const dot = v1.x * v2.x + v1.y * v2.y
+    const m1 = Math.hypot(v1.x, v1.y)
+    const m2 = Math.hypot(v2.x, v2.y)
+    if (m1 === 0 || m2 === 0) return null
+    const cos = Math.max(-1, Math.min(1, dot / (m1 * m2)))
+    return Math.acos(cos) * (180 / Math.PI)
   }
 
+  // smoothing optional
   const smoothKeypoints = (newKeypoints, alpha = 0.6) => {
     if (!smoothedKeypointsRef.current) {
       smoothedKeypointsRef.current = newKeypoints
       return newKeypoints
     }
-
-    return newKeypoints.map((kp, i) => {
-      const prev = smoothedKeypointsRef.current[i]
-      if (!prev) return kp
+    const prev = smoothedKeypointsRef.current
+    const out = newKeypoints.map((kp, i) => {
+      const p = prev[i]
+      if (!p) return kp
       return {
         ...kp,
-        x: alpha * kp.x + (1 - alpha) * prev.x,
-        y: alpha * kp.y + (1 - alpha) * prev.y
+        x: alpha * kp.x + (1 - alpha) * p.x,
+        y: alpha * kp.y + (1 - alpha) * p.y
+      }
+    })
+    smoothedKeypointsRef.current = out
+    return out
+  }
+
+  // Map keypoints -> named object and ensure coordinates are pixels
+  function getNamedKeypoints(keypoints) {
+    const keypointMap = [
+      'nose','left_eye','right_eye','left_ear','right_ear',
+      'left_shoulder','right_shoulder','left_elbow','right_elbow',
+      'left_wrist','right_wrist','left_hip','right_hip',
+      'left_knee','right_knee','left_ankle','right_ankle'
+    ]
+    const named = {}
+    const c = canvasRef.current
+    keypoints.forEach((kp, idx) => {
+      const name = kp.name || keypointMap[idx] || `kp_${idx}`
+      let x = kp.x; let y = kp.y
+      if (typeof x === 'number' && typeof y === 'number') {
+        // if normalized (<=1) convert to pixels
+        if (x <= 1 && y <= 1 && c) {
+          x = x * c.width
+          y = y * c.height
+        }
+      }
+      named[name] = { ...kp, x, y, name }
+    })
+    return named
+  }
+
+  // Draw skeleton and keypoints on canvas
+  function drawPose(ctx, namedKeypoints) {
+    if (!ctx) return
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    const connections = [
+      ['left_eye','right_eye'],['left_eye','left_ear'],['right_eye','right_ear'],
+      ['left_shoulder','right_shoulder'],['left_shoulder','left_hip'],['right_shoulder','right_hip'],
+      ['left_hip','right_hip'],['left_shoulder','left_elbow'],['left_elbow','left_wrist'],
+      ['right_shoulder','right_elbow'],['right_elbow','right_wrist'],
+      ['left_hip','left_knee'],['left_knee','left_ankle'],
+      ['right_hip','right_knee'],['right_knee','right_ankle']
+    ]
+    const DRAW_THRESHOLD = 0.15
+
+    ctx.lineWidth = 3
+    ctx.strokeStyle = '#D6001C'
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+
+    connections.forEach(([a,b]) => {
+      const p1 = namedKeypoints[a]; const p2 = namedKeypoints[b]
+      if (!p1 || !p2) return
+      if ((p1.score || 0) > DRAW_THRESHOLD && (p2.score || 0) > DRAW_THRESHOLD) {
+        ctx.beginPath()
+        ctx.moveTo(p1.x, p1.y)
+        ctx.lineTo(p2.x, p2.y)
+        ctx.stroke()
+      }
+    })
+
+    Object.values(namedKeypoints).forEach(kp => {
+      if (!kp) return
+      if ((kp.score || 0) > DRAW_THRESHOLD) {
+        ctx.fillStyle = 'rgba(214,0,28,0.28)'
+        ctx.beginPath()
+        ctx.arc(kp.x, kp.y, 8, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#D6001C'
+        ctx.beginPath()
+        ctx.arc(kp.x, kp.y, 4, 0, Math.PI * 2)
+        ctx.fill()
       }
     })
   }
 
+  // Core loop: estimate poses and update UI
   const analyzePose = async () => {
-    if (!detector || !videoRef.current || !canvasRef.current || !isAnalyzing) {
-      return
-    }
+    if (!detector || !videoRef.current || !canvasRef.current) return
+    if (!isAnalyzing) return
 
     const video = videoRef.current
     const canvas = canvasRef.current
-    
-    // Vérifier que la vidéo est prête (HAVE_ENOUGH_DATA = 4)
-    if (!video || video.readyState < 4) {
+    const ctx = canvas.getContext('2d')
+
+    // wait until video has enough data
+    if (video.readyState < 2) { // HAVE_CURRENT_DATA
       animationFrameRef.current = requestAnimationFrame(analyzePose)
       return
     }
 
-    const ctx = canvas.getContext('2d')
-
-    // Synchroniser les dimensions du canvas avec la vidéo
-    const videoWidth = video.videoWidth || video.clientWidth
-    const videoHeight = video.videoHeight || video.clientHeight
-    
-    if (canvas.width !== videoWidth || canvas.height !== videoHeight) {
-      canvas.width = videoWidth
-      canvas.height = videoHeight
-      // Ajuster le style pour correspondre à la vidéo
-      canvas.style.width = '100%'
-      canvas.style.height = '100%'
+    // ensure canvas size matches video
+    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+      canvas.width = video.videoWidth || canvas.clientWidth
+      canvas.height = video.videoHeight || canvas.clientHeight
     }
 
     try {
-      const poses = await detector.estimatePoses(video)
-      
-      // Effacer le canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      // estimate poses
+      const poses = await detector.estimatePoses(video, { maxPoses: 1, flipHorizontal: false })
+      if (!poses || poses.length === 0) {
+        setDetectionStatus('⚠️ Aucune pose détectée — placez-vous face à la caméra')
+        setAngles({})
+        setErrors([])
+        animationFrameRef.current = requestAnimationFrame(analyzePose)
+        return
+      }
 
-      if (poses.length > 0) {
-        const pose = poses[0]
-        const keypoints = pose.keypoints
-        const smoothed = smoothKeypoints(keypoints)
-        smoothedKeypointsRef.current = smoothed
+      const pose = poses[0]
+      let keypoints = pose.keypoints || []
+      keypoints = smoothKeypoints(keypoints, 0.6)
+      const named = getNamedKeypoints(keypoints)
 
-        // MoveNet peut utiliser des noms ou des indices
-        // Créer un objet avec les keypoints nommés pour faciliter l'accès
-        const namedKeypoints = {}
-        
-        // Si les keypoints ont déjà un nom, les utiliser directement
-        // Sinon, utiliser le mapping par index
-        const keypointMap = [
-          'nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear',
-          'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow',
-          'left_wrist', 'right_wrist', 'left_hip', 'right_hip',
-          'left_knee', 'right_knee', 'left_ankle', 'right_ankle'
-        ]
+      // draw skeleton for user feedback
+      drawPose(ctx, named)
 
-        smoothed.forEach((kp, index) => {
-          // Vérifier si le keypoint a déjà un nom
-          const name = kp.name || keypointMap[index] || `keypoint_${index}`
-          namedKeypoints[name] = { ...kp, name }
-        })
+      // compute angles & errors for the exercise
+      const newAngles = {}
+      const newErrors = []
+      let errorCount = 0
 
-        // Dessiner les connexions principales (squelette)
-        ctx.strokeStyle = '#D6001C'
-        ctx.lineWidth = 3
-        ctx.lineCap = 'round'
-        ctx.lineJoin = 'round'
+      if (exercise && exercise.id === 'squat-modified') {
+        const leftHip = named.left_hip, leftKnee = named.left_knee, leftAnkle = named.left_ankle
+        const rightHip = named.right_hip, rightKnee = named.right_knee, rightAnkle = named.right_ankle
 
-        // Définir les connexions du squelette
-        const skeletonConnections = [
-          // Tête
-          ['left_eye', 'right_eye'],
-          ['left_eye', 'left_ear'],
-          ['right_eye', 'right_ear'],
-          // Tronc
-          ['left_shoulder', 'right_shoulder'],
-          ['left_shoulder', 'left_hip'],
-          ['right_shoulder', 'right_hip'],
-          ['left_hip', 'right_hip'],
-          // Bras gauche
-          ['left_shoulder', 'left_elbow'],
-          ['left_elbow', 'left_wrist'],
-          // Bras droit
-          ['right_shoulder', 'right_elbow'],
-          ['right_elbow', 'right_wrist'],
-          // Jambe gauche
-          ['left_hip', 'left_knee'],
-          ['left_knee', 'left_ankle'],
-          // Jambe droite
-          ['right_hip', 'right_knee'],
-          ['right_knee', 'right_ankle']
-        ]
+        const leftOk = leftHip && leftKnee && leftAnkle && leftHip.score > 0.25 && leftKnee.score > 0.25 && leftAnkle.score > 0.25
+        const rightOk = rightHip && rightKnee && rightAnkle && rightHip.score > 0.25 && rightKnee.score > 0.25 && rightAnkle.score > 0.25
 
-        // Dessiner les lignes du squelette
-        skeletonConnections.forEach(([point1Name, point2Name]) => {
-          const point1 = namedKeypoints[point1Name]
-          const point2 = namedKeypoints[point2Name]
-          
-          if (point1 && point2 && point1.score > 0.3 && point2.score > 0.3) {
-            ctx.beginPath()
-            ctx.moveTo(point1.x, point1.y)
-            ctx.lineTo(point2.x, point2.y)
-            ctx.stroke()
-          }
-        })
-
-        // Dessiner les keypoints (points clés)
-        smoothed.forEach((kp, index) => {
-          if (kp.score > 0.3) {
-            // Cercle extérieur
-            ctx.fillStyle = 'rgba(214, 0, 28, 0.3)'
-            ctx.beginPath()
-            ctx.arc(kp.x, kp.y, 10, 0, 2 * Math.PI)
-            ctx.fill()
-            
-            // Point central
-            ctx.fillStyle = '#D6001C'
-            ctx.beginPath()
-            ctx.arc(kp.x, kp.y, 5, 0, 2 * Math.PI)
-            ctx.fill()
-          }
-        })
-
-        // Calculer les angles selon l'exercice
-        const newAngles = {}
-        const newErrors = []
-        let errorCount = 0
-
-        // Utiliser les keypoints nommés pour les calculs
-        if (exercise.id === 'squat-modified') {
-          // Angle genou (hanche-genou-cheville)
-          const leftHip = namedKeypoints['left_hip']
-          const leftKnee = namedKeypoints['left_knee']
-          const leftAnkle = namedKeypoints['left_ankle']
-          
-          const rightHip = namedKeypoints['right_hip']
-          const rightKnee = namedKeypoints['right_knee']
-          const rightAnkle = namedKeypoints['right_ankle']
-
-          // Utiliser le côté le plus visible
-          let hip, knee, ankle
-          if (leftHip && leftKnee && leftAnkle && 
-              leftHip.score > 0.3 && leftKnee.score > 0.3 && leftAnkle.score > 0.3) {
-            hip = leftHip
-            knee = leftKnee
-            ankle = leftAnkle
-          } else if (rightHip && rightKnee && rightAnkle &&
-                     rightHip.score > 0.3 && rightKnee.score > 0.3 && rightAnkle.score > 0.3) {
-            hip = rightHip
-            knee = rightKnee
-            ankle = rightAnkle
-          }
-
-          if (hip && knee && ankle) {
-            const kneeAngle = calculateAngle(hip, knee, ankle)
-            if (kneeAngle !== null) {
-              newAngles.knee = Math.round(kneeAngle)
-              if (exercise.angles && exercise.angles.knee && 
-                  (kneeAngle < exercise.angles.knee.min || kneeAngle > exercise.angles.knee.max)) {
-                newErrors.push({ id: 'knees-in', message: 'Vos genoux s\'effondrent vers l\'intérieur' })
+        if (leftOk || rightOk) {
+          const hip = leftOk ? leftHip : rightHip
+          const knee = leftOk ? leftKnee : rightKnee
+          const ankle = leftOk ? leftAnkle : rightAnkle
+          const kneeAngle = calculateAngle(hip, knee, ankle)
+          if (kneeAngle !== null) {
+            newAngles.knee = Math.round(kneeAngle)
+            if (exercise.angles && exercise.angles.knee) {
+              const min = exercise.angles.knee.min
+              const max = exercise.angles.knee.max
+              if (kneeAngle < min || kneeAngle > max) {
+                newErrors.push({ id: 'knees-in', message: "Vos genoux s'effondrent ou profondeur non correcte." })
                 errorCount++
               }
             }
           }
+        } else {
+          newErrors.push({ id: 'low-confidence', message: "Position pas assez visible — rapprochez-vous ou améliorez l'éclairage." })
         }
-
-        setAngles(newAngles)
-        setErrors(newErrors)
-        setScore(Math.max(0, 100 - (errorCount * 20)))
-        setDetectionStatus('✅ Pose détectée')
-      } else {
-        // Aucune pose détectée
-        setDetectionStatus('⚠️ Aucune pose détectée - Positionnez-vous face à la caméra')
-        
-        // Afficher un message visuel sur le canvas
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        ctx.fillStyle = '#FFFFFF'
-        ctx.font = 'bold 20px Inter'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText('Positionnez-vous face à la caméra', canvas.width / 2, canvas.height / 2)
       }
-    } catch (error) {
-      console.error('Error analyzing pose:', error)
+
+      // update UI
+      setAngles(newAngles)
+      setErrors(newErrors)
+      setScore(Math.max(0, 100 - errorCount * 20))
+      setDetectionStatus('✅ Pose détectée')
+
+    } catch (err) {
+      console.error('Error analyzing pose:', err)
+      setDetectionStatus('❌ Erreur d\'analyse')
     }
 
-    // Continuer la boucle d'analyse
-    if (isAnalyzing) {
-      animationFrameRef.current = requestAnimationFrame(analyzePose)
-    }
+    // schedule next frame
+    animationFrameRef.current = requestAnimationFrame(analyzePose)
   }
 
-  const startAnalysis = () => {
+  // Start analysis (called by button)
+  const startAnalysis = async () => {
     if (!hasPermission) {
-      requestCameraPermission()
-      return
+      await requestCameraPermission()
     }
     if (!detector) {
-      alert('Le détecteur de pose n\'est pas encore initialisé. Veuillez patienter...')
+      alert("Le détecteur n'est pas encore prêt — veuillez patienter.")
       return
     }
+    // ensure video ready
     const video = videoRef.current
-    if (!video || video.readyState !== 4) { // HAVE_ENOUGH_DATA = 4
-      alert('La vidéo n\'est pas encore prête. Veuillez patienter quelques secondes...')
+    if (!video) {
+      alert('Vidéo introuvable')
       return
     }
     setIsAnalyzing(true)
-    analyzePose()
+    setDetectionStatus('🔎 Analyse en cours...')
+    // small delay to allow video pipeline
+    setTimeout(() => {
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = requestAnimationFrame(analyzePose)
+    }, 120)
   }
 
   const stopAnalysis = () => {
     setIsAnalyzing(false)
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
     }
+    setDetectionStatus('⏸️ Analyse arrêtée')
   }
 
   const finishExercise = () => {
     stopAnalysis()
-    
-    // Sauvegarder la session
     const session = {
       id: Date.now(),
       exerciseId: exercise.id,
       exerciseName: exercise.name,
       mode: 'cam',
-      score: score,
-      angles: angles,
-      errors: errors,
+      score,
+      angles,
+      errors,
       completedAt: new Date().toISOString()
     }
-    
     const history = storage.get(STORAGE_KEYS.SESSION_HISTORY) || []
     history.push(session)
     storage.set(STORAGE_KEYS.SESSION_HISTORY, history)
-
-    // Afficher le résultat
     setTimeout(() => {
-      alert(`🎉 Exercice terminé !\n\nScore : ${score}%\nErreurs détectées : ${errors.length}`)
+      alert(`🎉 Exercice terminé ! Score : ${score}% — Erreurs : ${errors.length}`)
       navigate('/exercises')
-    }, 500)
+    }, 300)
   }
 
   if (!exercise) return null
 
   return (
-    <div className="exercise-cam-page">
+    <div className="exercise-player-page exercise-player-bleu-theme">
+    {/* 👇 FOND ORB EN ARRIÈRE-PLAN */}
+    <div className="exercise-player-background">
+      <Orb
+        hue={-30}
+        hoverIntensity={0.3}
+        rotateOnHover={false}
+        forceHoverState={false}
+      />
+    </div>
       <div className="container">
         <div className="exercise-cam-header">
-          <button className="btn-back" onClick={() => navigate('/exercises')}>
-            ← Retour
-          </button>
+          <button className="btn-back" onClick={() => navigate('/exercises')}>← Retour</button>
           <h1>{exercise.name}</h1>
-          <p className="privacy-notice">
-            🔒 Aucune image n'est envoyée au serveur — tout est traité localement sur votre appareil.
-          </p>
+          <p className="privacy-notice">🔒 Aucune image n'est envoyée au serveur — tout est traité localement sur votre appareil.</p>
         </div>
 
         <div className="exercise-cam-content">
@@ -397,15 +396,9 @@ function ExercisePlayerCam() {
           {hasPermission && (
             <>
               <div className="camera-container">
-                <div className="video-wrapper">
-                  <video
-                    ref={videoRef}
-                    className="camera-video"
-                    playsInline
-                    muted
-                    autoPlay
-                  />
-                  <canvas ref={canvasRef} className="camera-canvas" />
+                <div className="video-wrapper" style={{ position: 'relative' }}>
+                  <video ref={videoRef} className="camera-video" playsInline muted autoPlay style={{ width: '100%', height: 'auto', display: 'block', background: '#000' }} />
+                  <canvas ref={canvasRef} className="camera-canvas" style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none' }} />
                 </div>
               </div>
 
@@ -414,16 +407,16 @@ function ExercisePlayerCam() {
                   <h3>Statut de détection</h3>
                   <p className="detection-status">{detectionStatus}</p>
                 </div>
-                
+
                 <div className="angles-display">
                   <h3>Angles détectés</h3>
                   {Object.keys(angles).length === 0 ? (
                     <p className="no-data">En attente de détection...</p>
                   ) : (
-                    Object.entries(angles).map(([key, value]) => (
-                      <div key={key} className="angle-item">
-                        <span className="angle-label">{key}:</span>
-                        <span className="angle-value">{value}°</span>
+                    Object.entries(angles).map(([k, v]) => (
+                      <div key={k} className="angle-item">
+                        <span className="angle-label">{k}:</span>
+                        <span className="angle-value">{v}°</span>
                       </div>
                     ))
                   )}
@@ -434,10 +427,8 @@ function ExercisePlayerCam() {
                   {errors.length === 0 ? (
                     <p className="no-errors">✅ Posture correcte !</p>
                   ) : (
-                    errors.map((error, index) => (
-                      <div key={index} className="error-alert">
-                        ⚠️ {error.message}
-                      </div>
+                    errors.map((err, i) => (
+                      <div key={i} className="error-alert">⚠️ {err.message}</div>
                     ))
                   )}
                 </div>
@@ -450,21 +441,13 @@ function ExercisePlayerCam() {
 
               <div className="exercise-cam-actions">
                 {!isAnalyzing ? (
-                  <button
-                    className="btn btn-primary btn-large"
-                    onClick={startAnalysis}
-                    disabled={!isInitialized}
-                  >
+                  <button className="btn btn-primary btn-large" onClick={startAnalysis} disabled={!isInitialized}>
                     {!isInitialized ? 'Initialisation...' : 'Démarrer l\'analyse'}
                   </button>
                 ) : (
                   <>
-                    <button className="btn btn-secondary btn-large" onClick={stopAnalysis}>
-                      Arrêter
-                    </button>
-                    <button className="btn btn-primary btn-large" onClick={finishExercise}>
-                      Terminer
-                    </button>
+                    <button className="btn btn-secondary btn-large" onClick={stopAnalysis}>Arrêter</button>
+                    <button className="btn btn-primary btn-large" onClick={finishExercise}>Terminer</button>
                   </>
                 )}
               </div>
@@ -477,4 +460,3 @@ function ExercisePlayerCam() {
 }
 
 export default ExercisePlayerCam
-

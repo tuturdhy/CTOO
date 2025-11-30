@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { storage, STORAGE_KEYS } from '../utils/storage'
 import Badge from '../components/Badge'
 import './UserProfile.css'
-
+import Orb from './Orb';
 function UserProfile() {
   const navigate = useNavigate()
   const [history, setHistory] = useState([])
@@ -80,7 +80,16 @@ function UserProfile() {
   const progress = getProgressData()
 
   return (
-    <div className="profile-page">
+    <div className="profile-page">            {/* ← racine avec position: relative */}
+      <div className="profile-background">    {/* ← fond fixe */}
+        <Orb
+          hue={-30}
+          hoverIntensity={0.3}
+          rotateOnHover={false}
+          forceHoverState={false}
+        />
+      </div>
+
       <div className="container">
         <div className="profile-header">
           <button className="btn-back" onClick={() => navigate('/exercises')}>

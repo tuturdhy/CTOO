@@ -1,20 +1,23 @@
-// src/components/ExerciseCard.jsx
 import React from 'react';
-import './ExerciseCard.css'; // tu peux créer ce fichier ou intégrer le style ci-dessus
+import './ExerciseCard.css';
 
-export default function ExerciseCard({ exercise, onSelect, disabled = false }) {
+export default function ExerciseCard({ 
+  exercise, 
+  onSelect, 
+  disabled = false,
+  animationDelay = 0 // ← ajouté
+}) {
   return (
-    <div className={`exercise-card ${disabled ? 'disabled' : ''}`}>
-      <div className="exercise-card-image">
-        {/* Tu peux remplacer par <ExerciseSVG name={exercise.id} /> */}
-        <div style={{ fontSize: '3rem' }}>🏋️</div>
-      </div>
+    <div 
+      className={`exercise-card ${disabled ? 'disabled' : ''} animate-in`}
+      style={{ '--animation-delay': `${animationDelay}s` }} // ← délai personnalisé
+    >
       <div className="exercise-card-content">
         <h3>{exercise.name}</h3>
         <p>{exercise.description}</p>
         <div className="exercise-card-meta">
-          <span>🎯 {exercise.difficulty}</span>
-          <span>⏱️ {exercise.duration} min</span>
+          <span>{exercise.difficulty}</span>
+          <span>{exercise.duration} min</span>
         </div>
         {!disabled ? (
           <div className="btn-group">

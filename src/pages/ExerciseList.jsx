@@ -1,30 +1,30 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { filterExercisesByProfile } from '../data/exercises'
-import { storage, STORAGE_KEYS } from '../utils/storage'
-import ExerciseCard from '../components/ExerciseCard'
-import Orb from './Orb' // ou '../components/Orb' si vous mettez Orb dans components
-import './ExerciseList.css'
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { filterExercisesByProfile } from '../data/exercises';
+import { storage, STORAGE_KEYS } from '../utils/storage';
+import ExerciseCard from '../components/ExerciseCard';
+import Orb from './Orb';
+import TextType from '../components/TextType'; // ← ajouté
+import './ExerciseList.css';
 
 function ExerciseList() {
-  const navigate = useNavigate()
-  const [exercises, setExercises] = useState([])
+  const navigate = useNavigate();
+  const [exercises, setExercises] = useState([]);
 
   useEffect(() => {
-    const survey = storage.get(STORAGE_KEYS.USER_SURVEY)
-    const filtered = filterExercisesByProfile(survey)
-    setExercises(filtered)
-  }, [])
+    const survey = storage.get(STORAGE_KEYS.USER_SURVEY);
+    const filtered = filterExercisesByProfile(survey);
+    setExercises(filtered);
+  }, []);
 
   const exercisesByStatus = {
     recommended: exercises.filter(ex => ex.status === 'recommended'),
     modified: exercises.filter(ex => ex.status === 'modified'),
     avoid: exercises.filter(ex => ex.status === 'avoid')
-  }
+  };
 
   return (
     <div className="exercise-list-page">
-      {/* Background Orb */}
       <div className="exercise-background">
         <Orb
           hue={-30}
@@ -37,7 +37,14 @@ function ExerciseList() {
       <div className="container">
         <div className="exercise-list-header">
           <div className="header-top">
-            <h1>Exercices personnalisés</h1>
+            {/* ✨ Titre avec animation de frappe */}
+            <TextType
+              text="Exercices personnalisés"
+              typingSpeed={80}
+              pauseDuration={2000}
+              showCursor={false} // tu peux mettre true si tu veux le curseur
+              className="exercise-typing-title"
+            />
             <button 
               className="btn btn-secondary"
               onClick={() => navigate('/profile')}
@@ -51,15 +58,17 @@ function ExerciseList() {
         {exercisesByStatus.recommended.length > 0 && (
           <section className="exercise-section">
             <h2 className="section-title">
-              <span className="section-icon">✅</span>
+              <span className="section-icon"></span>
               Recommandés
             </h2>
             <div className="exercise-grid">
-              {exercisesByStatus.recommended.map(exercise => (
+              {exercisesByStatus.recommended.map((exercise, index) => (
                 <ExerciseCard
                   key={exercise.id}
                   exercise={exercise}
+                  className="recommended animate-in"
                   onSelect={(id, mode) => navigate(`/exercise/${id}/${mode}`)}
+                  animationDelay={index * 0.1} // ← on passe le délai
                 />
               ))}
             </div>
@@ -73,11 +82,13 @@ function ExerciseList() {
               À faire avec modifications
             </h2>
             <div className="exercise-grid">
-              {exercisesByStatus.modified.map(exercise => (
+              {exercisesByStatus.modified.map((exercise, index) => (
                 <ExerciseCard
                   key={exercise.id}
                   exercise={exercise}
+                  className="animate-in"
                   onSelect={(id, mode) => navigate(`/exercise/${id}/${mode}`)}
+                  animationDelay={index * 0.1}
                 />
               ))}
             </div>
@@ -91,12 +102,14 @@ function ExerciseList() {
               À éviter
             </h2>
             <div className="exercise-grid">
-              {exercisesByStatus.avoid.map(exercise => (
+              {exercisesByStatus.avoid.map((exercise, index) => (
                 <ExerciseCard
                   key={exercise.id}
                   exercise={exercise}
                   onSelect={(id, mode) => navigate(`/exercise/${id}/${mode}`)}
                   disabled={true}
+                  className="animate-in"
+                  animationDelay={index * 0.1}
                 />
               ))}
             </div>
@@ -111,7 +124,7 @@ function ExerciseList() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default ExerciseList
+export default ExerciseList;

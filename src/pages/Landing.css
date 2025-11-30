@@ -1,3 +1,4 @@
+
 .landing {
   min-height: 100vh;
   position: relative;
@@ -5,9 +6,27 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #000000;
+  /* 👇 Remplace le fond noir par un fond animé blanc + bleu */
+  background: linear-gradient(135deg, #ffffff 0%, #f8fcff 100%);
+  animation: softGlow 20s ease-in-out infinite alternate;
 }
 
+/* Nouvelle animation douce */
+@keyframes softGlow {
+  0% {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fcff 100%);
+  }
+  100% {
+    background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+  }
+}
+
+/* Supprime ou commente .landing-background (inutile maintenant) */
+/*
+.landing-background {
+  ... 
+}
+*/
 .landing-background {
   position: absolute;
   top: 0;
@@ -120,29 +139,38 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
 }
-
+/* Bouton "Commencer" */
 .btn-primary {
-  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
-  color: #ffffff !important;
-  border: none;
+  background: #99d9ff !important; /* Bleu clair entre blanc et bleu ciel */
+  color: #ffffff !important;      /* Texte blanc */
+  border: none !important;
   font-weight: 700;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-  color: #ffffff !important;
+  background: #80cfff !important; /* Bleu un peu plus foncé au hover */
+  color: #ffffff !important;      /* Texte reste blanc */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
+
+
+
+
+/* Boutons secondaires (Parcourir et Mon profil) */
+/* Boutons secondaires (Parcourir et Mon profil) */
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  color: #ffffff;
+  background: rgb(255, 255, 255) !important; /* Fond blanc */
+  border: 2px solid #0ea5e9 !important;     /* Bordure bleu ciel */
+  color: #0ea5e9 !important;                /* Texte bleu ciel */
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: rgb(255, 255, 255) !important; /* Fond blanc inchangé */
+  border-color: #38bdf8 !important;         /* Bordure bleu ciel clair au hover */
+  color: #38bdf8 !important;                /* Texte bleu ciel clair au hover */
 }
+
 
 .btn-large {
   min-width: 200px;
@@ -167,5 +195,30 @@
   
   .landing-gallery-container {
     height: 400px;
+  }
+}
+.btn {
+  position: relative;
+  overflow: hidden;
+  /* garde tout le reste de ton style */
+}
+
+.btn:active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  to {
+    transform: translate(-50%, -50%) scale(10);
+    opacity: 0;
   }
 }

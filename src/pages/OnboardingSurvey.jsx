@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { SURVEY_QUESTIONS } from '../data/survey'
 import { storage, STORAGE_KEYS } from '../utils/storage'
 import './OnboardingSurvey.css'
-
+import Orb from './Orb';
+import TextType from '../components/TextType';
 function OnboardingSurvey() {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(0)
@@ -74,7 +75,15 @@ function OnboardingSurvey() {
   }
 
   return (
-    <div className="survey-page">
+    <div className="survey-page">             {/* ← racine avec position: relative */}
+      <div className="survey-background">     {/* ← fond fixe */}
+        <Orb
+          hue={-30}
+          hoverIntensity={0.3}
+          rotateOnHover={false}
+          forceHoverState={false}
+        />
+      </div>
       <div className="container">
         <div className="survey-header">
           <button className="btn-back" onClick={handleBack}>
@@ -92,10 +101,15 @@ function OnboardingSurvey() {
         </div>
 
         <div className="survey-content fade-in">
-          <h2 className="survey-question">
-            {currentQuestion.question.question}
-          </h2>
-
+  <TextType
+    text={currentQuestion.question.question}
+    typingSpeed={70}
+    pauseDuration={2000}
+    showCursor={false}
+    className="survey-question"
+    textColors={["#4a90e2"]} // ← BLEU comme demandé
+    loop={false}
+  />
           <div className="survey-options">
             {currentQuestion.question.options.map((option, index) => {
               const optionValue = typeof option === 'string' ? option : option.id
